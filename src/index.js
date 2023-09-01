@@ -23,23 +23,12 @@ function view(dispatch, model) {
   const totalCalories = model.entries.reduce((total, entry) => total + parseInt(entry.calories), 0);
 
   return div({ className: "flex gap-4 flex-col items-center" }, [
-    h1({ className: "text-2xl" }, `Calorie calculator:`),
+    h1({ className: "text-2xl" }, `Weahter application:`),
 
     div({ className: "flex gap-4 items-center" }, [
       input({
-        className: "border p-2",
-        oninput: (event) => dispatch({ type: MSGS.INPUT_CHANGE_CALORIES, data: event.target.value }),
-        onkeydown: (event) => {
-          if (event.key === "Enter") {
-            dispatch({ type: MSGS.ADD_ENTRY });
-          }
-        },
-        value: model.inputCalories,
-        placeholder: "Enter calories...",
-      }),
-
-      input({
-        className: "border p-2",
+        className: "border p-2", 
+       
         oninput: (event) => dispatch({ type: MSGS.INPUT_CHANGE_FOOD, data: event.target.value }),
         onkeydown: (event) => {
           if (event.key === "Enter") {
@@ -47,7 +36,7 @@ function view(dispatch, model) {
           }
         },
         value: model.inputFood,
-        placeholder: "Enter food...",
+        placeholder: "Enter city...",
       }),
 
       button(
@@ -75,10 +64,6 @@ function view(dispatch, model) {
       { className: `${btnStyle} bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded`, onclick: () => dispatch({ type: MSGS.DELETE_ALL_ENTRIES }) }, 
       "Delete All"
     ),
-
-    div({ className: "flex gap-4 items-center" }, [
-      p({ className: "text-xl font-bold mt-4" }, `Total Calories: ${totalCalories}`),
-    ]),
   ]);
 }
 
