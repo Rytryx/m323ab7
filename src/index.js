@@ -52,7 +52,7 @@ function view(dispatch, model) {
       ),
     ]),
 
-    table({ className: "mt-4" }, [
+    table({ className: "mt-4 gap-4" }, [
       thead({}, [
         tr({}, [
           th({}, "City"),
@@ -101,11 +101,24 @@ function update(msg, model) {
       }
 
     case MSGS.SEND_ENTRY:
-      if (model.inputCity !== "") {     
-        return model;
+      if (model.inputCity !== "") {
+        // Hier fügen wir Testdaten basierend auf der eingegebenen Stadt hinzu
+        const testEntry = {
+          city: model.inputCity,
+          currentTemperature: "N/A",
+          minTemperature: "N/A",
+          maxTemperature: "N/A",
+        };
+
+        return {
+          ...model,
+          inputCity: "",
+          entries: [...model.entries, testEntry],
+        };
       } else {
         return model;
       }
+
     case MSGS.CANCEL_ENTRY:
       return {
         ...model,
