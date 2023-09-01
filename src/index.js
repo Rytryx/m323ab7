@@ -6,12 +6,17 @@ const button = (props, children) => h("button", props, children);
 const p = (props, children) => h("p", props, children);
 const h1 = (props, children) => h("h1", props, children);
 const input = (props) => h("input", props);
+const table = (props, children) => h("table", props, children);
+const thead = (props, children) => h("thead", props, children);
+const tbody = (props, children) => h("tbody", props, children);
+const tr = (props, children) => h("tr", props, children);
+const th = (props, children) => h("th", props, children);
+const td = (props, children) => h("td", props, children);
 
 const btnStyle = "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded";
 
 const MSGS = {
-  INPUT_CHANGE_CALORIES: "INPUT_CHANGE_CALORIES",
-  INPUT_CHANGE_FOOD: "INPUT_CHANGE_FOOD",
+  INPUT_SELECT_CITY: "INPUT_SELECT_CITY",
   ADD_ENTRY: "ADD_ENTRY",
   SEND_ENTRY: "SEND_ENTRY",
   CANCEL_ENTRY: "CANCEL_ENTRY",
@@ -20,22 +25,19 @@ const MSGS = {
 };
 
 function view(dispatch, model) {
-  const totalCalories = model.entries.reduce((total, entry) => total + parseInt(entry.calories), 0);
-
   return div({ className: "flex gap-4 flex-col items-center" }, [
-    h1({ className: "text-2xl" }, `Weahter application:`),
+    h1({ className: "text-2xl" }, `Weather Application:`),
 
     div({ className: "flex gap-4 items-center" }, [
       input({
-        className: "border p-2", 
-       
-        oninput: (event) => dispatch({ type: MSGS.INPUT_CHANGE_FOOD, data: event.target.value }),
+        className: "border p-2",
+        oninput: (event) => dispatch({ type: MSGS.INPUT_SELECT_CITY, data: event.target.value }),
         onkeydown: (event) => {
           if (event.key === "Enter") {
             dispatch({ type: MSGS.ADD_ENTRY });
           }
         },
-        value: model.inputFood,
+        value: model.inputCity,
         placeholder: "Enter city...",
       }),
 
@@ -43,25 +45,32 @@ function view(dispatch, model) {
         { className: `${btnStyle} bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded`, onclick: () => dispatch({ type: MSGS.SEND_ENTRY }) },
         "Add"
       ),
-      
+
       button(
         { className: `${btnStyle} bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded`, onclick: () => dispatch({ type: MSGS.CANCEL_ENTRY }) },
         "Cancel"
       ),
     ]),
 
-    div({ className: "flex flex-col mt-4" },
-      model.entries.map((entry, index) => div({ className: "flex items-center gap-2" }, [
-        p({}, `Eintrag ${index + 1}: ${entry.calories} kcal - ${entry.food}`),
-        button(
-          { className: `${btnStyle} bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded`, onclick: () => dispatch({ type: MSGS.DELETE_ENTRY, index }) },
-          "Delete"
-        ),
-      ]))
-    ),
+    table({ className: "mt-4" }, [
+      thead({}, [
+        tr({}, [
+          th({}, "City"),
+          th({}, "Current Temperature"),
+          th({}, "Min Temperature"),
+          th({}, "Max Temperature"),
+        ]),
+      ]),
+      tbody({}, model.entries.map((entry, index) => tr({}, [
+        td({}, entry.city),
+        td({}, entry.currentTemperature),
+        td({}, entry.minTemperature),
+        td({}, entry.maxTemperature),
+      ]))),
+    ]),
 
     button(
-      { className: `${btnStyle} bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded`, onclick: () => dispatch({ type: MSGS.DELETE_ALL_ENTRIES }) }, 
+      { className: `${btnStyle} bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded`, onclick: () => dispatch({ type: MSGS.DELETE_ALL_ENTRIES }) },
       "Delete All"
     ),
   ]);
@@ -69,43 +78,38 @@ function view(dispatch, model) {
 
 function update(msg, model) {
   switch (msg.type) {
-    case MSGS.INPUT_CHANGE_CALORIES:
-      return { ...model, inputCalories: msg.data };
-
-    case MSGS.INPUT_CHANGE_FOOD:
-      return { ...model, inputFood: msg.data };
+    case MSGS.INPUT_SELECT_CITY:
+      return { ...model, inputCity: msg.data };
 
     case MSGS.ADD_ENTRY:
-      return {
-        ...model,
-        inputCalories: "",
-        inputFood: "",
-        entries: [
-          ...model.entries,
-          { calories: model.inputCalories, food: model.inputFood },
-        ],
-      };
+      if (model.inputCity !== "") {
+        // Hier fügen wir Testdaten basierend auf der eingegebenen Stadt hinzu
+        const testEntry = {
+          city: model.inputCity,
+          currentTemperature: "N/A",
+          minTemperature: "N/A",
+          maxTemperature: "N/A",
+        };
 
-    case MSGS.SEND_ENTRY:
-      if (model.inputCalories !== "" && model.inputFood !== "") {
         return {
           ...model,
-          inputCalories: "",
-          inputFood: "",
-          entries: [
-            ...model.entries,
-            { calories: model.inputCalories, food: model.inputFood },
-          ],
+          inputCity: "",
+          entries: [...model.entries, testEntry],
         };
       } else {
         return model;
       }
 
+    case MSGS.SEND_ENTRY:
+      if (model.inputCity !== "") {     
+        return model;
+      } else {
+        return model;
+      }
     case MSGS.CANCEL_ENTRY:
       return {
         ...model,
-        inputCalories: "",
-        inputFood: "",
+        inputCity: "",
       };
 
     case MSGS.DELETE_ENTRY:
@@ -117,12 +121,14 @@ function update(msg, model) {
         return model;
       }
 
-    case MSGS.DELETE_ALL_ENTRIES: 
-      return { ...model, entries: [] }; 
+    case MSGS.DELETE_ALL_ENTRIES:
+      return { ...model, entries: [] };
+
     default:
       return model;
   }
 }
+
 
 function app(initModel, update, view, node) {
   let model = initModel;
@@ -140,8 +146,7 @@ function app(initModel, update, view, node) {
 }
 
 const initModel = {
-  inputCalories: "",
-  inputFood: "",
+  inputCity: "",
   entries: [],
 };
 
