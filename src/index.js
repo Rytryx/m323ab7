@@ -15,6 +15,8 @@ const MSGS = {
   ADD_ENTRY: "ADD_ENTRY",
   SEND_ENTRY: "SEND_ENTRY",
   CANCEL_ENTRY: "CANCEL_ENTRY",
+  DELETE_ENTRY: "DELETE_ENTRY",
+  DELETE_ALL_ENTRIES: "DELETE_ALL_ENTRIES", 
 };
 
 function view(dispatch, model) {
@@ -49,22 +51,34 @@ function view(dispatch, model) {
       }),
 
       button(
-        { className: btnStyle, onclick: () => dispatch({ type: MSGS.SEND_ENTRY }) },
+        { className: `${btnStyle} bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded`, onclick: () => dispatch({ type: MSGS.SEND_ENTRY }) },
         "Add"
       ),
+      
       button(
-        { className: btnStyle, onclick: () => dispatch({ type: MSGS.CANCEL_ENTRY }) },
+        { className: `${btnStyle} bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded`, onclick: () => dispatch({ type: MSGS.CANCEL_ENTRY }) },
         "Cancel"
       ),
     ]),
 
     div({ className: "flex flex-col mt-4" },
-      model.entries.map((entry, index) =>
-        p({}, `Eintrag ${index + 1}: ${entry.calories} kcal - ${entry.food}`))),
+      model.entries.map((entry, index) => div({ className: "flex items-center gap-2" }, [
+        p({}, `Eintrag ${index + 1}: ${entry.calories} kcal - ${entry.food}`),
+        button(
+          { className: `${btnStyle} bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded`, onclick: () => dispatch({ type: MSGS.DELETE_ENTRY, index }) },
+          "Delete"
+        ),
+      ]))
+    ),
+
+    button(
+      { className: `${btnStyle} bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded`, onclick: () => dispatch({ type: MSGS.DELETE_ALL_ENTRIES }) }, 
+      "Delete All"
+    ),
+
     div({ className: "flex gap-4 items-center" }, [
-    p({ className: "text-xl font-bold mt-4" }, `Total Calories: ${totalCalories}`),
-   
-  ]),
+      p({ className: "text-xl font-bold mt-4" }, `Total Calories: ${totalCalories}`),
+    ]),
   ]);
 }
 
@@ -109,6 +123,17 @@ function update(msg, model) {
         inputFood: "",
       };
 
+    case MSGS.DELETE_ENTRY:
+      if (model.entries.length > msg.index) {
+        const updatedEntries = [...model.entries];
+        updatedEntries.splice(msg.index, 1);
+        return { ...model, entries: updatedEntries };
+      } else {
+        return model;
+      }
+
+    case MSGS.DELETE_ALL_ENTRIES: 
+      return { ...model, entries: [] }; 
     default:
       return model;
   }
