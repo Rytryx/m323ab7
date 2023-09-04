@@ -21,7 +21,25 @@ const MSGS = {
   SEND_ENTRY: "SEND_ENTRY",
   CANCEL_ENTRY: "CANCEL_ENTRY",
   DELETE_ENTRY: "DELETE_ENTRY",
-  DELETE_ALL_ENTRIES: "DELETE_ALL_ENTRIES", 
+  DELETE_ALL_ENTRIES: "DELETE_ALL_ENTRIES",
+  WEATHER_DATA_RECEIVED: "WEATHER_DATA_RECEIVED",
+};
+
+// Hier ist deine `makeOpenWeatherAPICall`-Funktion, die die API aufruft
+const APIKEY = "4d017dea7a54f398446910f9172f057e";
+
+const makeOpenWeatherAPICall = async (location, dispatch) => {
+  const URL = `https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${APIKEY}&units=metric`;
+  try {
+    const response = await fetch(URL);
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    const data = await response.json();
+    dispatch({ type: MSGS.WEATHER_DATA_RECEIVED, data });
+  } catch (error) {
+    console.error('Error fetching weather data:', error);
+  }
 };
 
 function view(dispatch, model) {
@@ -34,7 +52,8 @@ function view(dispatch, model) {
         oninput: (event) => dispatch({ type: MSGS.INPUT_SELECT_CITY, data: event.target.value }),
         onkeydown: (event) => {
           if (event.key === "Enter") {
-            dispatch({ type: MSGS.ADD_ENTRY });
+            // Hier rufen wir die API auf, wenn Enter gedrückt wird
+            makeOpenWeatherAPICall(model.inputCity, dispatch);
           }
         },
         value: model.inputCity,
@@ -42,12 +61,15 @@ function view(dispatch, model) {
       }),
 
       button(
-        { className: `${btnStyle} bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded`, onclick: () => dispatch({ type: MSGS.SEND_ENTRY }) },
+        { className: `${btnStyle} bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded`, onclick: () => {
+          // Hier rufen wir die API auf, wenn der "Add" Button geklickt wird
+          makeOpenWeatherAPICall(model.inputCity, dispatch);
+        } },
         "Add"
       ),
 
       button(
-        { className: `${btnStyle} bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded`, onclick: () => dispatch({ type: MSGS.CANCEL_ENTRY }) },
+        { className: `${btnStyle} bg-red-500 hover.bg-red-600 text-white font-bold py-2 px-4 rounded`, onclick: () => dispatch({ type: MSGS.CANCEL_ENTRY }) },
         "Cancel"
       ),
     ]),
@@ -55,17 +77,17 @@ function view(dispatch, model) {
     table({ className: "mt-4 gap-4" }, [
       thead({}, [
         tr({}, [
-          th({}, "City"),
-          th({}, "Current Temperature"),
-          th({}, "Min Temperature"),
-          th({}, "Max Temperature"),
+          th({ className: "px-4 py-2 text-left" }, "City"),
+          th({ className: "px-4 py-2" }, "Temperature (°C)"),
+          th({ className: "px-4 py-2" }, "Min Temperature (°C)"),
+          th({ className: "px-4 py-2" }, "Max Temperature (°C)"),
         ]),
       ]),
       tbody({}, model.entries.map((entry, index) => tr({}, [
-        td({}, entry.city),
-        td({}, entry.currentTemperature),
-        td({}, entry.minTemperature),
-        td({}, entry.maxTemperature),
+        td({ className: "border px-4 py-2 text-left" }, entry.city),
+        td({ className: "border px-4 py-2" }, entry.currentTemperature),
+        td({ className: "border px-4 py-2" }, entry.minTemperature),
+        td({ className: "border px-4 py-2" }, entry.maxTemperature),
       ]))),
     ]),
 
@@ -83,39 +105,28 @@ function update(msg, model) {
 
     case MSGS.ADD_ENTRY:
       if (model.inputCity !== "") {
-        // Hier fügen wir Testdaten basierend auf der eingegebenen Stadt hinzu
-        const testEntry = {
-          city: model.inputCity,
-          currentTemperature: "N/A",
-          minTemperature: "N/A",
-          maxTemperature: "N/A",
-        };
-
-        return {
-          ...model,
-          inputCity: "",
-          entries: [...model.entries, testEntry],
-        };
+        // Hier rufen wir die API auf, wenn der "Add" Button geklickt wird
+        makeOpenWeatherAPICall(model.inputCity, dispatch);
+        return { ...model, inputCity: "" };
       } else {
         return model;
       }
 
-    case MSGS.SEND_ENTRY:
-      if (model.inputCity !== "") {
-        // Hier fügen wir Testdaten basierend auf der eingegebenen Stadt hinzu
-        const testEntry = {
-          city: model.inputCity,
-          currentTemperature: "N/A",
-          minTemperature: "N/A",
-          maxTemperature: "N/A",
+    case MSGS.WEATHER_DATA_RECEIVED:
+      if (msg.data.main) {
+        const newEntry = {
+          city: msg.data.name, // Stadtname aus der API-Antwort
+          currentTemperature: msg.data.main.temp,
+          minTemperature: msg.data.main.temp_min,
+          maxTemperature: msg.data.main.temp_max,
         };
-
         return {
           ...model,
           inputCity: "",
-          entries: [...model.entries, testEntry],
+          entries: [...model.entries, newEntry],
         };
       } else {
+        console.error('Weather data not available for the specified city.');
         return model;
       }
 
@@ -141,7 +152,6 @@ function update(msg, model) {
       return model;
   }
 }
-
 
 function app(initModel, update, view, node) {
   let model = initModel;
