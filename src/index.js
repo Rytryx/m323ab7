@@ -25,7 +25,6 @@ const MSGS = {
   WEATHER_DATA_RECEIVED: "WEATHER_DATA_RECEIVED",
 };
 
-// Hier ist deine `makeOpenWeatherAPICall`-Funktion, die die API aufruft
 const APIKEY = "4d017dea7a54f398446910f9172f057e";
 
 const makeOpenWeatherAPICall = async (location, dispatch) => {
@@ -52,7 +51,6 @@ function view(dispatch, model) {
         oninput: (event) => dispatch({ type: MSGS.INPUT_SELECT_CITY, data: event.target.value }),
         onkeydown: (event) => {
           if (event.key === "Enter") {
-            // Hier rufen wir die API auf, wenn Enter gedrückt wird
             makeOpenWeatherAPICall(model.inputCity, dispatch);
           }
         },
@@ -62,7 +60,6 @@ function view(dispatch, model) {
 
       button(
         { className: `${btnStyle} bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded`, onclick: () => {
-          // Hier rufen wir die API auf, wenn der "Add" Button geklickt wird
           makeOpenWeatherAPICall(model.inputCity, dispatch);
         } },
         "Add"
@@ -105,7 +102,6 @@ function update(msg, model) {
 
     case MSGS.ADD_ENTRY:
       if (model.inputCity !== "") {
-        // Hier rufen wir die API auf, wenn der "Add" Button geklickt wird
         makeOpenWeatherAPICall(model.inputCity, dispatch);
         return { ...model, inputCity: "" };
       } else {
@@ -115,7 +111,7 @@ function update(msg, model) {
     case MSGS.WEATHER_DATA_RECEIVED:
       if (msg.data.main) {
         const newEntry = {
-          city: msg.data.name, // Stadtname aus der API-Antwort
+          city: msg.data.name, 
           currentTemperature: msg.data.main.temp,
           minTemperature: msg.data.main.temp_min,
           maxTemperature: msg.data.main.temp_max,
